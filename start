@@ -1,0 +1,21 @@
+#!/bin/bash
+
+cd docker-host-proxy
+./launch
+cd ..
+
+cd docker-simplesamlphp
+./launch
+cd ..
+
+cd docker-console
+./launch
+cd ..
+
+cd docker-gitlab
+./launch
+cd ..
+
+cd docker-ldap
+./launch
+cd ..

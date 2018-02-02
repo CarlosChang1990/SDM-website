@@ -1,0 +1,106 @@
+version: '2'
+
+services:
+  redis:
+    restart: unless-stopped
+    image: sameersbn/redis:latest
+    command:
+      - --loglevel warning
+    volumes:
+      - ./volumes/redis:/var/lib/redis:Z
+    mem_limit: 700m
+    environment:
+      - TZ=CST-8
+
+  psql:
+    restart: unless-stopped
+    image: sameersbn/postgresql:9.6-2
+    volumes:
+      - ./volumes/postgresql:/var/lib/postgresql:Z
+    mem_limit: 700m
+    environment:
+      - TZ=CST-8
+
+      - DB_USER=gitlab
+      - DB_PASS=password
+      - DB_NAME=gitlabhq_production
+      - DB_EXTENSION=pg_trgm
+
+  main:
+    restart: unless-stopped
+    image: sameersbn/gitlab:9.5.4
+    depends_on:
+      - redis
+      - psql
+    networks:
+      - default
+      - lewatch
+    ports:
+      - "22:22"
+    volumes:
+      - ./volumes/gitlab:/home/git/data
+    environment:
+      - TZ=CST
+      - VIRTUAL_HOST=${SERVER_DOMAIN}
+      - LETSENCRYPT_HOST=${SERVER_DOMAIN}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_CONTACT_EMAIL}
+
+      - DEBUG=false
+  
+      - DB_ADAPTER=postgresql
+      - DB_HOST=psql
+      - DB_PORT=5432
+      - DB_USER=gitlab
+      - DB_PASS=password
+      - DB_NAME=gitlabhq_production
+  
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+  
+      - GITLAB_TIMEZONE=Taipei
+      - GITLAB_HTTPS=true
+      - SSL_SELF_SIGNED=false
+  
+      - GITLAB_HOST=${SERVER_DOMAIN}
+      - GITLAB_PORT=
+      - GITLAB_SSH_PORT=22
+      - GITLAB_RELATIVE_URL_ROOT=
+      - GITLAB_SECRETS_DB_KEY_BASE=${DB_KEY_BASE}
+      - GITLAB_SECRETS_SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - GITLAB_SECRETS_OTP_KEY_BASE=${OTP_KEY_BASE}
+      - GITLAB_ROOT_PASSWORD=iamsdmadmin
+      - GITLAB_ROOT_EMAIL=carlos@ntu.edu.tw
+      - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true
+      - GITLAB_NOTIFY_PUSHER=false
+      - GITLAB_EMAIL=notifications@example.com
+      - GITLAB_EMAIL_REPLY_TO=noreply@example.com
+      - GITLAB_INCOMING_EMAIL_ADDRESS=reply@example.com
+      - GITLAB_BACKUP_SCHEDULE=daily
+      - GITLAB_BACKUP_TIME=01:00
+      - GITLAB_SIGNUP_ENABLED=false 
+ 
+      - SMTP_ENABLED=false
+      - IMAP_ENABLED=false 
+      - OAUTH_ENABLED=false
+
+      - LDAP_ENABLED=true
+      - LDAP_LABEL="SDM Sign-in"
+      - LDAP_HOST=ldap
+      - LDAP_PORT=636
+      - LDAP_METHOD=ssl
+      - LDAP_UID=cn
+      - LDAP_ACTIVE_DIRECTORY=false
+      - LDAP_ALLOW_USERNAME_OR_EMAIL_LOGIN=true
+      - LDAP_BLOCK_AUTO_CREATED_USERS=false
+      - LDAP_PASS=${LDAP_ADMIN_PASSWORD}
+      - LDAP_BIND_DN=${LDAP_BIND}
+      - LDAP_BASE=${LDAP_BASE}
+
+    expose:
+      - 80
+      - 443
+
+networks:
+  lewatch:
+    external:
+      name: hostproxy_default

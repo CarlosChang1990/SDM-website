@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<head>
+	<title>2017軟體開發方法課程網站</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet" type="text/css">
+	<link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+	<link href="css/font-awesome.min.css" rel="stylesheet" type="text/css">
+	<link href="css/templatemo_style.css" rel="stylesheet" type="text/css">
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<script>
+		$(document).ready(function() {
+
+			$("#signup_Btn").click(function() {
+				signUp();
+			});
+
+			$("#changepw_Btn").click(function() {
+				changePw();
+			});
+
+			$("#sso_update").click(function() {
+				ssoUpdate();
+			});
+
+                        $("#sso_check").click(function() {
+                                ssoCheck();
+                        });
+
+			$("#homepage_li").click(function() {
+				display(this);
+			});
+
+			$("#signup_li").click(function() {
+				display(this);
+			});
+
+			$("#changepw_li").click(function() {
+				display(this);
+			});
+
+			$("#SSO_li").click(function() {
+				display(this);
+			});
+
+		});
+
+		function signUp() {
+			if (!idFormatCheck($("#signup_div input[name='id']").val())) {
+				alert("學號格式錯誤");
+				return;
+			}
+			$.ajax({
+				url: '/sign_up',
+				type: 'POST',
+				data: {
+					userId: $("#signup_div input[name='id']").val()
+				},
+				error: function(xhr) {
+					alert('發生錯誤，請洽助教');
+				},
+				success: function(response) {
+					alert(response);
+					clearboxes();
+				}
+			});
+
+		}
+
+		function changePw() {
+			if (!idFormatCheck()) {
+				alert("學號格式錯誤");
+				return;
+			}
+
+			if (!passwordFormatCheck()) {
+				alert("密碼格式錯誤");
+				return;
+			}
+
+			if (!passwordFormatCheck()) {
+				alert("新密碼格式錯誤");
+				return;
+			}
+
+			if (!newPasswordCheck()) {
+				alert("新密碼與新密碼確認不相同");
+				return;
+			}
+
+			$.ajax({
+				url: '/change_pw',
+				type: 'POST',
+				data: {
+					userId: $("#changepw_div input[name='id']").val(),
+					password: $("#changepw_div input[name='password']").val(),
+					newpassword: $("#changepw_div input[name='newpassword']").val()
+				},
+				error: function(xhr) {
+					alert('發生錯誤，請洽助教');
+				},
+				success: function(response) {
+					alert(response);
+					clearboxes();
+				}
+			});
+		}
+
+                function ssoCheck() {
+                        if (!idFormatCheck($("#SSO_div input[name='id']").val())) {
+                                alert("學號格式錯誤");
+                                return;
+                        }
+                        $.ajax({
+                                url: '/sso_check',
+                                type: 'POST',
+				dataType: "json", 
+                                data: {
+                                        userId: $("#SSO_div input[name='id']").val(),
+                                        password: $("#SSO_div input[name='password']").val(),
+                                },
+                                error: function(xhr) {
+                                        alert('發生錯誤，請洽助教');
+                                },
+                                success: function(response) {
+                                        if(response.hasOwnProperty('result')){
+					  $("#SSO_div input[name='usersp']").val(response.result[0].metadata_url);
+					  $("#SSO_div input[name='loginto']").val(response.result[0].login_callback_url);
+					  $("#SSO_div input[name='logoutto']").val(response.result[0].logout_callback_url);
+					} else {
+					  alert("帳號密碼輸入錯誤");
+					}
+                                }
+                        });
+
+                }
+
+
+		function ssoUpdate() {
+			if (!idFormatCheck($("#SSO_div input[name='id']").val())) {
+				alert("學號格式錯誤");
+				return;
+			}
+			$.ajax({
+				url: '/sso_update',
+				type: 'POST',
+				data: {
+					userId: $("#SSO_div input[name='id']").val(),
+					password: $("#SSO_div input[name='password']").val(),
+					usersp: $("#SSO_div input[name='usersp']").val(),
+					loginto: $("#SSO_div input[name='loginto']").val(),
+					logoutto: $("#SSO_div input[name='logoutto']").val()
+				},
+				error: function(xhr) {
+					alert('發生錯誤，請洽助教');
+				},
+				success: function(response) {
+					alert(response);
+				}
+			});
+
+		}
+
+		function idFormatCheck(id) {
+			return true;
+		}
+
+		function passwordFormatCheck(password) {
+			return true;
+		}
+
+		function newPasswordCheck() {
+			if ($("#changepw_div input[name='newpassword']").val() != $("#changepw_div input[name='newpasswordcheck']").val()) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		function clearboxes() {
+			$("#changepw_div input[name='id']").val("");
+			$("#changepw_div input[name='password']").val("");
+			$("#changepw_div input[name='newpassword']").val("");
+			$("#changepw_div input[name='newpasswordcheck']").val("");
+
+			$("#signup_div input[name='id']").val("");
+
+			$("#SSO_div input[name='id']").val("");
+			$("#SSO_div input[name='password']").val("");
+			$("#SSO_div input[name='usersp']").val("");
+			$("#SSO_div input[name='loginto']").val("");
+			$("#SSO_div input[name='logoutto']").val("");
+		}
+
+		function display(element) {
+			//change active class to taget_li
+			$(element).siblings().find("a").attr("class", "");
+			$(element).find("a").attr("class", "active");
+			//show the taget div
+			var element_id = $(element).attr('id').split("_")[0];
+			var target_div = element_id + "_div";
+			$(".tm-right-inner-container").hide();
+			$("#" + target_div).show();
+
+		}
+	</script>
+</head>
+
+<body>
+	<div class="templatemo-logo visible-xs-block">
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 black-bg logo-left-container">
+			<h1 class="logo-left">SDM</h1>
+		</div>
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 white-bg logo-right-container">
+			<h1 class="logo-right">2017</h1>
+		</div>
+	</div>
+	<div class="templatemo-container">
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 black-bg left-container">
+			<h1 class="logo-left hidden-xs margin-bottom-60">SDM</h1>
+			<div class="tm-left-inner-container">
+				<ul class="nav nav-stacked templatemo-nav">
+					<li id="homepage_li"><a class="active"><i class="fa fa-home fa-medium"></i>Homepage</a></li>
+					<li id="signup_li"><a><i class="fa fa-shopping-cart fa-medium"></i>Sign up</a></li>
+					<li id="changepw_li"><a><i class="fa fa-send-o fa-medium"></i>ChangePw</a></li>
+					<li id="SSO_li"><a><i class="fa fa-comments-o fa-medium"></i>SSO service</a></li>
+					<li><a href="https://gitlab.sdm.im.ntu.edu.tw"><i class="fa fa-send-o fa-medium"></i>gitlab</a></li>
+					<li><a href="http://www.im.ntu.edu.tw/~tsay/dokuwiki/doku.php?id=courses:sdm2017:main"><i class="fa fa-send-o fa-medium"></i>老師網站</a></li>
+				</ul>
+			</div>
+		</div>
+		<!-- left section -->
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 white-bg right-container">
+			<h1 class="logo-right hidden-xs margin-bottom-60">2017</h1>
+			<div id="homepage_div" class="tm-right-inner-container">
+				<h1 class="templatemo-header">軟體開發方法課程網站</h1>
+				<p>This is the SDM course website handled by TA.<br />If any problems, please contact jake080449@gmail.com<br />Thank you.</p>
+			</div>
+			<div id="signup_div" class="tm-right-inner-container" style="display:none">
+				<h1 class="templatemo-header">註冊帳號</h1>
+				<ul>
+					<li>學號：
+						<input type="text" name="id" maxlength="9" /><br /></li>
+					<li><button id="signup_Btn">註冊</button></li>
+				</ul>
+			</div>
+			<div id="changepw_div" class="tm-right-inner-container" style="display:none">
+				<h1 class="templatemo-header">修改密碼</h1>
+				<ul>
+					<li>學號：
+						<input type="text" name="id" maxlength="9" /><br /></li>
+					<li>原密碼：
+						<input type="password" name="password" /><br /> </li>
+					<li>新密碼：
+						<input type="password" name="newpassword" /><br /></li>
+					<li>新密碼確認：
+						<input type="password" name="newpasswordcheck"/><br /></li>
+					<li>
+						<button id="changepw_Btn">修改密碼</button></li>
+				</ul>
+			</div>
+			<div id="SSO_div" class="tm-right-inner-container" style="display:none">
+				<h1 class="templatemo-header">SSO登記</h1>
+				<ul>
+					<li>學號：
+						<input type="text" name="id" maxlength="9" /><br /></li>
+					<li>密碼：
+						<input type="password" name="password" /><br /></li>
+					<li>網站的entityId(Ex:entityId of sp in settings.php)：
+						<input type="text" name="usersp" size="90" /><br /></li>
+                                        <li>登入後跳轉網址：
+                                                <input type="text" name="loginto" size="90" /><br /></li>
+					<li>登出後跳轉網址：
+						<input type="text" name="logoutto" size="90" /><br /></li>
+					<li>
+						<button id="sso_check">查詢</button><button id="sso_update">登記/修改</button></li>
+				</ul>
+			</div>
+		</div>
+		<!-- right section -->
+	</div>
+</body>
+
+</html>

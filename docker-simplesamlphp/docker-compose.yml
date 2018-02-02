@@ -1,0 +1,35 @@
+version: '2'
+
+services:
+  main:
+    restart: unless-stopped
+    image: local/simplesamlphp:2017 
+    networks:
+      - default
+      - lewatch
+    volumes:
+      - ./volumes/config:/var/www/html/config
+      - ./volumes/metadata:/var/www/html/metadata
+      - ./volumes/cert:/var/www/html/cert
+      - ./volumes/apacheconfig/apache2.conf:/etc/apache2/apache2.conf
+    environment:
+      - TZ=CST-8
+      - VIRTUAL_HOST=${SERVER_DOMAIN}
+      - LETSENCRYPT_HOST=${SERVER_DOMAIN}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_CONTACT_EMAIL}
+      - LDAP_HOST=ldap
+      - LDAP_DOMAIN=
+      - LDAP_BIND_DN=${LDAP_BIND_DN}
+      - LDAP_BASE=${LDAP_BASE}
+      - LDAP_ADMIN_PASSWORD=${LDAP_ADMIN_PASSWORD}
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DB=${MYSQL_DB}
+    expose:
+      - "80"
+  
+networks:
+  lewatch:
+    external:
+      name: hostproxy_default

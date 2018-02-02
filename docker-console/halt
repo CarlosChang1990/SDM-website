@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+sudo /usr/local/bin/docker-compose down
+docker rmi console_main

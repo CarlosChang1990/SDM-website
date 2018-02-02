@@ -1,0 +1,46 @@
+version: '2'
+
+services:
+  mysql:
+    restart: unless-stopped
+    image: mysql:latest
+    networks: 
+      - default
+      - simplesamlphpwatch
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql
+      - ./mysqlinit:/docker-entrypoint-initdb.d
+    environment:
+      - TZ=CST-8
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=console
+    expose:
+      - "3306"
+
+  main:
+    restart: unless-stopped
+    build: .
+    command: npm start
+    networks:
+      - default
+      - lewatch
+    volumes:
+      - ./volumes/console:/usr/app
+    environment:
+      - TZ=CST-8
+      - VIRTUAL_HOST=${SERVER_DOMAIN}
+      - LETSENCRYPT_HOST=${SERVER_DOMAIN}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_CONTACT_EMAIL}
+      - NODE_ENV=production
+    expose:
+      - "8080"
+  
+networks:
+  lewatch:
+    external:
+      name: hostproxy_default
+
+  simplesamlphpwatch:
+    external:
+      name: simplesamlphp_default
+

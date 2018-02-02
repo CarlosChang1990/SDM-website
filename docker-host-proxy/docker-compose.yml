@@ -1,0 +1,27 @@
+version: "2"
+
+services:
+  main:
+    image: jwilder/nginx-proxy:${MAIN_IMG_VERSION}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./volumes/cert:/etc/nginx/certs:ro
+      - ./volumes/vhost:/etc/nginx/vhost.d
+      - ./volumes/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    environment:
+      - DEFAULT_HOST=${DEFAULT_HOST}
+    restart: unless-stopped
+
+  le:
+    image: jrcs/letsencrypt-nginx-proxy-companion:${LE_IMG_VERSION}
+    depends_on:
+      - main
+    volumes_from:
+      - main
+    volumes:
+      - ./volumes/cert:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped

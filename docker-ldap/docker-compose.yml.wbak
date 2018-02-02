@@ -1,0 +1,59 @@
+version: '2'
+
+services:
+  backup:
+    restart: unless-stopped
+    image: osixia/openldap-backup:1.1.9
+    volumes:
+      - ./volumes/bak/openldap:/data/backup
+    environment:
+      - TZ=CST-8
+
+      - LDAP_BACKUP_CONFIG_CRON_EXP='0 20 * * *' \
+      - LDAP_BACKUP_DATA_CRON_EXP='10 20 * * *' \
+      - LDAP_BACKUP_TTL='7' \
+
+  ldap:
+    restart: unless-stopped
+    image: osixia/openldap:1.1.9
+    tty: true
+    stdin_open: true
+    networks:
+      - default
+      - gitlabwatch
+      - consolewatch
+    ports:
+      - "389:389"
+      - "636:636"
+    volumes:
+      - ./volumes/certs:/container/service/slapd/assets/certs
+      - ./volumes/config:/etc/ldap/slapd.d
+      - ./volumes/data:/var/lib/ldap
+    environment:
+      - TZ=CST-8
+
+      - LDAP_ORGANISATION=${LDAP_ORGANISATION}
+      - LDAP_ADMIN_PASSWORD={$LDAP_ADMIN_PASSWORD}
+      - LDAP_CONFIG_PASSWORD={$LDAP_ADMIN_PASSWORD}
+      - LDAP_READONLY_USER='true'
+      - LDAP_READONLY_USER_USERNAME=${LDAP_CLIENT_USER}
+      - LDAP_READONLY_USER_PASSWORD=${LDAP_CLIENT_USER_PASSWORD}
+
+      - LDAP_TLS="true"
+      - LDAP_TLS_CRT_FILENAME="ldap.crt"
+      - LDAP_TLS_KEY_FILENAME="ldap.key"
+      - LDAP_TLS_CA_CRT_FILENAME="ca.crt"
+      - LDAP_TLS_ENFORCE="false"
+      - LDAP_TLS_CIPHER_SUITE="SECURE256:-VERS-SSL3.0"
+      - LDAP_TLS_PROTOCOL_MIN="3.1"
+      - LDAP_TLS_VERIFY_CLIENT="never"
+
+
+networks:
+  gitlabwatch:
+    external:
+      name: gitlab_default
+
+  consolewatch:
+    external:
+      name: console_default
